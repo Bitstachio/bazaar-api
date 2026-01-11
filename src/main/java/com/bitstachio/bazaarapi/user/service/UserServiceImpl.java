@@ -5,7 +5,9 @@ import com.bitstachio.bazaarapi.user.dto.UserCreateRequest;
 import com.bitstachio.bazaarapi.user.dto.UserResponse;
 import com.bitstachio.bazaarapi.user.dto.UserUpdateRequest;
 import com.bitstachio.bazaarapi.user.repository.UserRepository;
+
 import lombok.RequiredArgsConstructor;
+
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -19,33 +21,30 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserResponse create(UserCreateRequest request) {
-        var user = User.builder()
-                .name(request.getName())
-                .email(request.getEmail())
-                .build();
+        var user = User.builder().name(request.getName()).email(request.getEmail()).build();
 
         return toResponse(userRepository.save(user));
     }
 
     @Override
     public UserResponse getById(UUID id) {
-        return userRepository.findById(id)
+        return userRepository
+                .findById(id)
                 .map(this::toResponse)
                 .orElseThrow(() -> new RuntimeException("User not found"));
     }
 
     @Override
     public List<UserResponse> getAll() {
-        return userRepository.findAll()
-                .stream()
-                .map(this::toResponse)
-                .toList();
+        return userRepository.findAll().stream().map(this::toResponse).toList();
     }
 
     @Override
     public UserResponse update(UUID id, UserUpdateRequest request) {
-        var user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        var user =
+                userRepository
+                        .findById(id)
+                        .orElseThrow(() -> new RuntimeException("User not found"));
 
         user.setName(request.getName());
         user.setEmail(request.getEmail());

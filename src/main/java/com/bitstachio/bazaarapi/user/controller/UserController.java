@@ -4,7 +4,9 @@ import com.bitstachio.bazaarapi.user.dto.UserCreateRequest;
 import com.bitstachio.bazaarapi.user.dto.UserResponse;
 import com.bitstachio.bazaarapi.user.dto.UserUpdateRequest;
 import com.bitstachio.bazaarapi.user.service.UserService;
+
 import lombok.RequiredArgsConstructor;
+
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -33,10 +35,7 @@ public class UserController {
     }
 
     @PutMapping("/{id}")
-    public UserResponse update(
-            @PathVariable UUID id,
-            @RequestBody UserUpdateRequest request
-    ) {
+    public UserResponse update(@PathVariable UUID id, @RequestBody UserUpdateRequest request) {
         return userService.update(id, request);
     }
 

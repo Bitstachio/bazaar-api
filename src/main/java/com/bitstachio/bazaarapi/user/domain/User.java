@@ -1,7 +1,8 @@
 package com.bitstachio.bazaarapi.user.domain;
 
-import lombok.*;
 import jakarta.persistence.*;
+
+import lombok.*;
 
 import java.util.UUID;
 
@@ -14,9 +15,7 @@ import java.util.UUID;
 @Builder
 public class User {
 
-    @Id
-    @GeneratedValue
-    private UUID id;
+    @Id @GeneratedValue private UUID id;
 
     private String name;
 
