@@ -22,7 +22,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserResponse create(UserCreateRequest request) {
-        var user = User.builder().name(request.getName()).email(request.getEmail()).build();
+        var user = User.builder().name(request.name()).email(request.email()).build();
 
         return toResponse(userRepository.save(user));
     }
@@ -44,8 +44,8 @@ public class UserServiceImpl implements UserService {
     public UserResponse update(UUID id, UserUpdateRequest request) {
         var user = userRepository.findById(id).orElseThrow(() -> new UserNotFoundException(id));
 
-        user.setName(request.getName());
-        user.setEmail(request.getEmail());
+        user.setName(request.name());
+        user.setEmail(request.email());
 
         return toResponse(userRepository.save(user));
     }

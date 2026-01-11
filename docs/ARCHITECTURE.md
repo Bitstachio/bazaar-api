@@ -170,6 +170,8 @@ public interface UserRepository extends JpaRepository<User, UUID> {
 - Use `@Entity` annotation
 - Use `@Table(name = "table_name")` to specify table names
 - Use Lombok annotations: `@Getter`, `@Setter`, `@NoArgsConstructor`, `@AllArgsConstructor`, `@Builder`
+  - Do not use `@Data` because it generates `equals()` and `hashCode()` for all fields, which can break JPA proxies and
+    cause unexpected behavior
 - Use UUIDs for primary keys
 - Keep entities free of business logic
 
@@ -206,24 +208,25 @@ public class User {
 - Provide data validation
 
 **Guidelines**:
-- Use Lombok `@Data` or `@Getter`/`@Setter` with `@Builder`
-- Keep DTOs immutable when possible
+- Use Java records for DTOs to ensure immutability
+- Apply Lombok `@Builder` when constructing response records
+- Annotate record components with `jakarta.validation` constraints
 - Never expose internal entity structure directly
 
 **Example**:
 ```java
-@Data
-@Builder
-public class UserResponse {
-    private UUID id;
-    private String name;
-    private String email;
+public record UserCreateRequest(
+    String name,
+    String email
+) {
 }
 
-@Data
-public class UserCreateRequest {
-    private String name;
-    private String email;
+@Builder
+public record UserResponse(
+    UUID id,
+    String name,
+    String email
+) {
 }
 ```
 
