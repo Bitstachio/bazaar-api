@@ -2,7 +2,8 @@
 
 ## Overview
 
-This document describes the architectural patterns and project structure used in the Bazaar API. All developers should follow these conventions when adding new features or modules.
+This document describes the architectural patterns and project structure used in the Bazaar API. All developers should
+follow these conventions when adding new features or modules.
 
 ## Technology Stack
 
@@ -14,7 +15,8 @@ This document describes the architectural patterns and project structure used in
 
 ## Package Structure
 
-The project follows a **feature-based package structure** where each business domain (e.g., `user`, `product`, `order`) has its own package with consistent internal organization.
+The project follows a **feature-based package structure** where each business domain (e.g., `user`, `product`, `order`)
+has its own package with consistent internal organization.
 
 ### Feature Package Layout
 
@@ -76,6 +78,7 @@ com.bitstachio.bazaarapi.user/
 @RequestMapping("/api/users")
 @RequiredArgsConstructor
 public class UserController {
+    
     private final UserService userService;
 
     @PostMapping
@@ -95,6 +98,7 @@ public class UserController {
 **Purpose**: Implement business logic
 
 **Structure**:
+
 - Interface defining the contract (e.g., `UserService.java`)
 - Implementation class (e.g., `UserServiceImpl.java`)
 
@@ -114,9 +118,11 @@ public class UserController {
 
 **Example**:
 ```java
+
 @Service
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
+    
     private final UserRepository userRepository;
 
     @Override
@@ -185,10 +191,7 @@ public interface UserRepository extends JpaRepository<User, UUID> {
 @AllArgsConstructor
 @Builder
 public class User {
-    @Id
-    @GeneratedValue
-    private UUID id;
-
+    @Id @GeneratedValue private UUID id;
     private String name;
     private String email;
 }
@@ -215,57 +218,118 @@ public class User {
 
 **Example**:
 ```java
-public record UserCreateRequest(
-    String name,
-    String email
-) {
-}
+public record UserCreateRequest(String name, String email) {}
 
 @Builder
-public record UserResponse(
-    UUID id,
-    String name,
-    String email
-) {
+public record UserResponse(UUID id, String name, String email) {}
+```
+
+## Exception Handling
+
+The Bazaar API uses a centralized exception handling strategy with a `GlobalExceptionHandler`.
+
+### Throwing Exceptions
+
+Exceptions must be thrown from the **service layer**, not the controller. Controllers should allow exceptions to
+propagate to the global handler:
+
+```java
+// Service layer - throw exceptions here
+@Service
+@RequiredArgsConstructor
+public class UserServiceImpl implements UserService {
+    
+    @Override
+    public UserResponse getById(UUID id) {
+        return userRepository
+                .findById(id)
+                .orElseThrow(() -> new UserNotFoundException(id));
+    }
+}
+
+// Controller - let exceptions propagate
+@RestController
+@RequiredArgsConstructor
+public class UserController {
+    
+    @GetMapping("/{id}")
+    public UserResponse getById(@PathVariable UUID id) {
+        return userService.getById(id);  // No try-catch needed
+    }
 }
 ```
 
-### 6. Exception Layer (`exception/`)
+### Base Exception Classes
 
-**Purpose**: Feature-specific custom exceptions
+Base exceptions in the global exception package map to HTTP status codes:
 
-**Responsibilities**:
-- Provide meaningful error messages
-- Extend `RuntimeException` for unchecked exceptions
+- `ResourceNotFoundException` → 404 Not Found
+- `BadRequestException` → 400 Bad Request
+- More exceptions to be added in the future...
 
-**Guidelines**:
-- Name exceptions clearly (e.g., `UserNotFoundException`)
-- Include context in error messages
-- Create constructors that accept relevant parameters
+The global exception handler catches these base exceptions and automatically returns the appropriate HTTP status code.
+All feature-specific exceptions should extend these base classes to get mapped to the correct status code via
+polymorphism. If a custom exception does not extend one of the specified base exceptions, it will be caught by
+`@ExceptionHandler(Exception.class)` and result in an internal server error (HTTP status 500).
 
 **Example**:
 ```java
-public class UserNotFoundException extends RuntimeException {
-    public UserNotFoundException(UUID id) {
-        super("User not found with id: " + id);
+@RestControllerAdvice
+public class GlobalExceptionHandler {
+
+    // Handles ResourceNotFoundException and all subclasses (e.g., UserNotFoundException)
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleResourceNotFound(ResourceNotFoundException ex) {
+        // Construct the error response with a 404 status code
     }
+}
+
+// Base exception for "not found" errors - maps to 404 status code
+public class ResourceNotFoundException extends RuntimeException {
+
+    public ResourceNotFoundException(String message) {
+        super(message);
+    }
+}
+
+// Feature-specific exception that inherits 404 status code mapping
+public class UserNotFoundException extends ResourceNotFoundException {
+
+    public UserNotFoundException(UUID id) {
+        super("User not found with ID: " + id);
+    }
+}
+```
+
+## Error Response Format
+
+All errors return a consistent JSON structure:
+
+```json
+{
+  "status": 404,
+  "message": "User not found with ID: 123e4567-e89b-12d3-a456-426614174000",
+  "timestamp": "2024-01-15T10:30:00"
 }
 ```
 
 ## Best Practices
 
 ### Code Style
-- Use **Google Java Format with AOSP style** via fmt-maven-plugin
+
+- Use **Google Java Format with AOSP style** via `fmt-maven-plugin`
 - Run `mvn fmt:format` before committing
 - 100-character line length (Google standard)
 - 4-space indentation (AOSP style)
 
 ### Dependency Injection
+
 - Always use constructor injection
 - Use Lombok's `@RequiredArgsConstructor` for final fields
 - Never use field injection (`@Autowired` on fields)
 
 ### Naming Conventions
+
 - Controllers: `<Feature>Controller`
 - Services: `<Feature>Service` (interface) and `<Feature>ServiceImpl` (implementation)
 - Repositories: `<Feature>Repository`
@@ -274,6 +338,7 @@ public class UserNotFoundException extends RuntimeException {
 - Exceptions: `<Feature><Error>Exception`
 
 ### Error Handling
+
 - Always throw custom exceptions, never generic `RuntimeException`
 - Provide meaningful error messages with context
 - Use constructor parameters to include relevant IDs or data
@@ -295,11 +360,13 @@ When adding a new feature (e.g., "Product"):
 ## Code Formatting
 
 Run formatting before committing:
+
 ```bash
 mvn fmt:format
 ```
 
 Check if the code is properly formatted:
+
 ```bash
 mvn fmt:check
 ```
