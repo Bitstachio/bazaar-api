@@ -1,0 +1,53 @@
+@import "tailwindcss";
+
+:root {
+  /* Backgrounds (slightly darker VS Code inspired) */
+  --bg-main: #191919;
+  --bg-surface: #202020;
+  --bg-elevated: #282828;
+
+  /* Text */
+  --text-strong: #e6e6e6;
+  --text-primary: #bcbcbc;
+  --text-secondary: #8a8a8a;
+
+  /* Accent (spring green) */
+  --accent-primary: #00e676;
+  --accent-hover: #33f08c;
+  --accent-active: #00c853;
+
+  --focus-ring: rgba(0, 230, 118, 0.55);
+  --shadow-accent: 0 0 28px rgba(0, 230, 118, 0.35);
+
+  /* Borders & effects */
+  --border-default: #333333;
+  --border-muted: #262626;
+}
+
+@theme inline {
+  --color-background: var(--bg-main);
+  --color-surface: var(--bg-surface);
+  --color-elevated: var(--bg-elevated);
+
+  --color-strong: var(--text-strong);
+  --color-foreground: var(--text-primary);
+  --color-muted: var(--text-secondary);
+
+  --color-accent: var(--accent-primary);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-active: var(--accent-active);
+
+  --color-border: var(--border-default);
+
+  --font-sans: var(--font-sans);
+}
+
+body {
+  background-color: var(--bg-main);
+  color: var(--text-primary);
+  @apply font-sans antialiased;
+}
+
+.app-text-link {
+  @apply text-strong hover:text-accent font-semibold transition-colors duration-300;
+}
